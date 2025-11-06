@@ -1,5 +1,6 @@
 package com.yh.security.config;
 
+import com.yh.security.core.JwtProvider;
 import com.yh.security.core.JwtProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -20,6 +21,13 @@ public class SecurityAutoConfiguration {
     private final CustomAccessDeniedHandler deniedHandler;
     private final CustomAuthenticationEntryPoint entryPoint;
 
+    // ✅ JwtProvider 빈 등록
+    @Bean
+    public JwtProvider jwtProvider(JwtProperties jwtProperties) {
+        return new JwtProvider(jwtProperties);
+    }
+
+    // ✅ Spring Security 기본 구성
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
