@@ -7,9 +7,6 @@ import lombok.RequiredArgsConstructor;
 import javax.crypto.SecretKey;
 import java.util.Date;
 
-/**
- * ✅ JWT 발급 및 검증 유틸리티
- */
 @RequiredArgsConstructor
 public class JwtProvider {
 
@@ -18,7 +15,6 @@ public class JwtProvider {
     // ✅ 토큰 생성
     public String createToken(String username, String role) {
         SecretKey key = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
-
         return Jwts.builder()
                 .setSubject(username)
                 .claim("role", role)
