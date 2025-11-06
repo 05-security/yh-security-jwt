@@ -12,22 +12,30 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * ✅ Spring Boot AutoConfiguration
+ * - JWT 기반 SecurityFilterChain 자동 설정
+ */
 @AutoConfiguration
 @EnableConfigurationProperties(JwtProperties.class)
 @RequiredArgsConstructor
 public class SecurityAutoConfiguration {
 
-    private final JwtAuthenticationFilter jwtFilter;
     private final CustomAccessDeniedHandler deniedHandler;
     private final CustomAuthenticationEntryPoint entryPoint;
+    private final JwtProvider jwtProvider;
 
-    // ✅ JwtProvider 빈 등록
+    /**
+     * ✅ JwtAuthenticationFilter Bean 등록
+     */
     @Bean
-    public JwtProvider jwtProvider(JwtProperties jwtProperties) {
-        return new JwtProvider(jwtProperties);
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtProvider);
     }
 
-    // ✅ Spring Security 기본 구성
+    /**
+     * ✅ SecurityFilterChain 설정
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -36,8 +44,10 @@ public class SecurityAutoConfiguration {
                 .exceptionHandling(ex -> ex
                         .accessDeniedHandler(deniedHandler)
                         .authenticationEntryPoint(entryPoint))
-                .authorizeHttpRequests(req -> req.anyRequest().authenticated())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .authorizeHttpRequests(req -> req
+                        .requestMatchers("/login", "/auth/**", "/public/**").permitAll()
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 }
