@@ -2,6 +2,7 @@ package io.yh.security.config.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
 import javax.crypto.SecretKey;
@@ -12,7 +13,7 @@ import java.util.function.Function;
 public abstract class JwtProvider<T> {
 
     public SecretKey getKey(String secretKey) {
-        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
     }
 
     public abstract Claims buildClaims(T member);
