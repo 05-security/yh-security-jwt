@@ -1,2 +1,3 @@
 io.yh.security.util.YhDefaultSecurityConfig
 io.yh.security.util.YhDefaultConfig
+io.yh.security.util.YhSecurityAutoConfiguration

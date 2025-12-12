@@ -1,7 +1,6 @@
 package io.yh.security.filter;
 
 import io.yh.security.config.FilterContext;
-import io.yh.security.member.model.YhMemberDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
@@ -44,8 +44,8 @@ public class LoginFilterBasic extends UsernamePasswordAuthenticationFilter {
             FilterChain chain,
             Authentication authResult)
             throws IOException {
-        YhMemberDetails memberDetails = (YhMemberDetails) authResult.getPrincipal();
-        successHandler.successHandler(request, response, memberDetails);
+        UserDetails userDetails = (UserDetails) authResult.getPrincipal();
+        successHandler.successHandler(request, response, userDetails);
     }
 
     @Override

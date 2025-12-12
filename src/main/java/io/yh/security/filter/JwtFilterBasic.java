@@ -3,15 +3,18 @@ package io.yh.security.filter;
 import io.yh.security.config.FilterContext;
 import io.yh.security.config.SecurityProperties;
 import io.yh.security.config.jwt.JwtProvider;
-import io.yh.security.member.model.YhMemberDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.crypto.SecretKey;
@@ -20,12 +23,16 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtFilterBasic extends OncePerRequestFilter {
 
-    private final JwtProvider<YhMemberDetails> jwtProvider;
+    private final JwtProvider<String> jwtProvider;
     private final SecurityProperties properties;
+    private final UserDetailsService userDetailsService;
+    private final AuthenticationEntryPoint authenticationEntryPoint;
 
-    public JwtFilterBasic(FilterContext context) {
-        this.jwtProvider = (JwtProvider<YhMemberDetails>) context.jwtProvider();
+    public JwtFilterBasic(FilterContext context, UserDetailsService userDetailsService, AuthenticationEntryPoint authenticationEntryPoint) {
+        this.jwtProvider = (JwtProvider<String>) context.jwtProvider();
         this.properties = context.properties();
+        this.userDetailsService = userDetailsService;
+        this.authenticationEntryPoint = authenticationEntryPoint;
     }
 
     @Override
@@ -50,16 +57,20 @@ public class JwtFilterBasic extends OncePerRequestFilter {
             return;
         }
 
-        SecretKey key = jwtProvider.getKey(properties.getJwtSecret());
-        YhMemberDetails memberDetails = jwtProvider.parseJwtToken(token, key);
+        try {
+            SecretKey key = jwtProvider.getKey(properties.getJwtSecret());
+            String username = jwtProvider.parseJwtToken(token, key);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                memberDetails,
-                null,
-                memberDetails.getAuthorities()
-        );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        filterChain.doFilter(request, response);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    null,
+                    userDetails.getAuthorities()
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            filterChain.doFilter(request, response);
+        } catch (Exception ex) {
+            authenticationEntryPoint.commence(request, response, new InsufficientAuthenticationException(ex.getMessage(), ex));
+        }
     }
 }
